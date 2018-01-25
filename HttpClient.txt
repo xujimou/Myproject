@@ -1,0 +1,84 @@
+﻿*****以NameValue对的方式将数据放入list集合中
+ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
+params.add(new BasicNameValuePair("tenant", tenant));
+
+*****method是一个post对象，利用setEntity方式把参数添加在post请求后面
+*****UrlEncodedFormEntity方法把参数设置为设置为param1=value1&param2=value2
+method.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
+
+
+
+*****设置HttpClient，设置请求超时时间和等待超时时间
+*****利用该client执行post请求，sc为200时返回成功
+HttpClient client = new DefaultHttpClient();
+HttpParams params = client.getParams();
+HttpConnectionParams.setConnectionTimeout(params, 40*1000);
+HttpConnectionParams.setSoTimeout(params, 40*1000);
+HttpResponse response = client.execute(post);
+int sc = response.getStatusLine().getStatusCode();
+
+******resposne.getEntity返回一个Entity对象,利用EntityUtils.toString解析成字符串
+String jsonStr = EntityUtils.toString(response.getEntity());
+
+*****新建一个sslclient， 代替httpclient 重写Scheme (类结构),
+public SSLClient() throws Exception {
+		super();
+		SSLContext ctx = SSLContext.getInstance("TLS");
+		X509TrustManager tm = new X509TrustManager() {
+			@Override
+			public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+			}
+
+			@Override
+			public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+			}
+
+			@Override
+			public X509Certificate[] getAcceptedIssuers() {
+				return null;
+			}
+		};
+		ctx.init(null, new TrustManager[] { tm }, null);
+		SSLSocketFactory ssf = new SSLSocketFactory(ctx, SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+		ClientConnectionManager ccm = this.getConnectionManager();
+		SchemeRegistry sr = ccm.getSchemeRegistry();
+		sr.register(new Scheme("https", 443, ssf));
+	}
+	
+*****http请求缺点，(一个request，一个response) 服务器一直是等待客户端的请求，不会主动发起请求，十分被动
+	http请求的两种方式:
+	ajax轮询:
+	客户端request:有消息吗?
+	服务端response:没有
+	客户端request:有消息吗?
+	服务端response:有...返回消息
+	
+	long poll； (阻塞)
+	客户端request:有消息吗?没有的话等到有再给我吧  
+	服务端response:暂时没有... 有了，返回消息
+	websocket:
+	 客户端：啦啦啦，我要建立Websocket协议，需要的服务：chat，Websocket协议版本：17（HTTP Request）
+	服务端：ok，确认，已升级为Websocket协议（HTTP Protocols Switched）
+	客户端：麻烦你有信息的时候推送给我噢。。
+	服务端：ok，有的时候会告诉你的。
+	服务端：balabalabalabala
+	***Http协议在(接线员)nginx服务器的解析下，再传送给handler， 接线员跟客户端建立持久连接，有数据的话服务端联系接线员，然后由接线员统一交给客户端。
+	
+	
+	
+***** 同步和非同步，阻塞和非阻塞
+ 将同步和非同步比作打电话:同步就是电话拨过去后一直通着，隔一段时间问一下，这个叫做轮询，
+ 非同步就是电话打过去问了以后就挂了，然后等对方的返回信息。
+ 
+ 阻塞就是一直等待对方的回信，不管是不是同步，一直等待。
+ 非阻塞就是跟对方把消息发给对方后，去干其他的事情。
+ 
+ 传统BIO,传统的io就是同步阻塞的方式，有可能会造成永久阻塞，但是速度是最快的
+ 
+ 伪异步IO，将线程托管给线程池，但是底层还是用同步阻塞的方式进行通信
+ NIO,主要使用的是同步非阻塞方式进行通信，
+	
+	
+	
+	
+	
