@@ -1,0 +1,400 @@
+$("#jqGridId").jqGrid({
+					datatype:'local',  //为了使jqgrid加载空表格成功，类型设置成本地类型
+					//data:json2,   
+					 colNames:['name','charges'],  
+					    // 列表模型  
+					     colModel:[   
+					        {name:'name',index:'invdate', width:100,align:'center'},
+					        {name:'charges',index:'invdate', width:100,align:'center'},
+					    ],  
+					    // 一页显示的行记录数  
+				 	rowNum:2,  
+					width:800,
+					height:50,
+				    // 翻页DOM  
+				    pager: '#pager',  
+				    // 默认排序字段  
+				    sortname: 'invdate',  
+				    // 显示总记录数
+				   // viewrecords: true,  
+				    rownumbers : true,
+				    // 默认字段排序顺序，默认asc，正序  
+				    sortorder: "asc", 	
+				    //loadonce:true, //如果为ture则数据只从服务器端抓取一次，之后所有操作都是在客户端执行，翻页功能会被禁用 
+				     jsonReader : {  
+			            root : 'service', // 将后台service转为rows
+			            page : 'page', // 
+			            total : 'total', // 
+			            records : 'records', // 
+			            repeatitems: false
+			        },
+			           loadComplete: function(){
+				    	alert("loadComplete");
+			        	//addJSONData();
+				        } 
+			        
+				});
+					
+		//去后台重新加载数据
+		$("#but").click(function(){
+			$("#jqGridId").jqGrid('clearGridData');
+			var param={"username":"uuu"};
+			$("#jqGridId").jqGrid( //重加载数据..
+					'setGridParam', {
+						page : 1,
+						url : "ServiceServlet",
+						datatype : 'json'
+					}).trigger("reloadGrid"); 
+		});
+				
+		//获取pager输入框中的数据 判断是否合法
+		onPaging : function(pgButton) {
+								if (pgButton == 'user') {
+									var $input = $("#pager").find("input[role='textbox'][class='ui-pg-input']");
+									var curPg = $input.val();
+									var reg = /^[1-9]+[0-9]*]*$/;
+									var totalRecs = $("#jqGridId").getGridParam("records");
+									var rowNum = $("#jqGridId").getGridParam("rowNum");
+									var totalPg = Math.ceil(totalRecs / rowNum); 
+									if (totalPg == 0)
+										totalPg = 1;
+									alert("当前页面"+curPg+"总页面"+totalPg);
+									if (reg.test(curPg)) {
+										if (parseInt(curPg) > parseInt(totalPg)) {
+											$input.val(totalPg);
+										}
+									}
+								}
+							}
+		// 重新设置数据  设置每一行的行高			
+		loadComplete: function() {  
+					            var grid = $("#jqGridId");  
+					            var ids = grid.getDataIDs();  
+					            for (var i = 0; i < ids.length; i++) {  
+					                grid.setRowData ( ids[i], false, {height:50} );  
+					            }  
+					        }  
+				
+		//设置每行的字体格式 
+		colModel: [
+                {
+                    name: '列名称',
+                    index: '列名称',
+                    width: 65,
+                    resizable: false,
+                    cellattr: addCellAttr   //添加函数
+                }]
+		//该函数对单元格重新设置样式		
+		function addCellAttr(rowId, val, rawObject, cm, rdata) {
+				if (条件) {
+                    return "style='color:red'";
+                }
+}		
+			
+
+*****实例***前台代码********************
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<title>课金情报</title>
+
+<link rel="stylesheet" type="text/css" href="jqGrid/css/ui.jqgrid.css" />
+<script type="text/javascript" src="jqGrid/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="jqGrid/js/i18n/grid.locale-cn.js"></script>
+<script type="text/javascript" src="jqGrid/js/jquery.jqGrid.min.js"></script>
+
+<link rel="stylesheet" type="text/css"href="jquery-ui-1.11.1/jquery-ui.theme-custom.css" />
+<script type="text/javascript" src="jquery-ui-1.11.1/jquery-ui.js"></script>
+
+<script type="text/javascript" src="js/worktest.js"></script>
+<link rel="stylesheet" type="text/css" href="css/worktest.css" />
+<script language="javascript">
+   var data=<%=request.getAttribute("jsonObj")%>
+</script>
+</head>
+<body>
+	<div id="container">
+		<div class="head">
+
+			<div class="colline"></div>
+			<div class="headline">
+				<h2>课金情报</h2> 
+			</div>
+			<div class="rowline"></div>
+		</div>
+		<div class="body">
+
+			<div class="body_head">
+				<h4>日付</h4>
+			</div>
+			<div class="body_message">
+				<p id="dat"></p>
+			</div>
+
+			<div class="body_head">
+				<h4>テナント</h4>
+			</div>
+			<div class="body_message">
+				<p id="name"></p>
+			</div>
+
+			<div class="body_head">
+				<h4 id="money_head">ナント課金総額名</h4>
+			</div>
+			
+			<div class="body_message">
+				<p id="money"></p>
+			</div>
+
+			<div id="tableDiv" >
+				<div class="body_head">
+					<h4>内訳</h4>
+				</div>
+				<div id="ndv" class="body_table">
+					<table id="tb">
+
+					</table>
+					<br>
+					<table id="jqGridId">
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
+
+
+*****脚本代码***********************
+var json1;  //代表items.tenant
+var stat; //ajax请求返回的status
+	$(function() {
+		alert("初始化");
+		askData("");//2.ajax请求数据
+		if(stat.errcode!=null && stat.errcode == 0)
+		{
+			initTable(); //1.初始化表格并加载数据
+			initTenant();//3.利用ajax数据初始化tenant信息
+			addData();
+		}
+		if(stat.errcode!=null && stat.errcode != 0)
+		{
+			$("#money_head").text("エラーメッセージ");
+			$("#money").text("specified tenant is not found");
+			$("#tableDiv").addClass("body_table_none");
+		}
+	});
+	
+	function addData() {   //表格tb添加单行数据
+		jQuery("#tb").jqGrid("clearGridData");//清空表格中所有数据
+			var attributes = json1.attributes;
+			var message = attributes.period + " " + attributes.type + " "
+					+ attributes.amount + "円/" + attributes.unit_amount
+					+ attributes.unit_symbol;
+			var mydata = {
+				"id":1,
+				"name" : json1.name,
+				"attribute" : message,
+				"charges" : json1.charges
+			};
+			jQuery("#tb").jqGrid('addRowData',1, mydata);
+	}
+
+	function askData(indexpage) {
+				$.ajax({
+					url : 'LastServlet',
+					type : 'post',
+					dataType : 'json',
+					async:false,
+					success : function(data) {
+						var dat = data.date;
+						stat=data.status
+						$("#dat").text(dat.year + "年" + dat.month + "月" + dat.day+ "日");
+						tenant = data.tenant;
+						$("#name").text(tenant.name);
+						$("#money").text(tenant.charges);
+
+						var items = data.items;
+						json1 = items.tenant;
+					}
+				});
+			}
+	
+	function initTable() {
+		$("#jqGridId").jqGrid(
+						{
+							datatype : 'json',
+							url:'LastServlet?type=grid',
+							mytype:'post',
+							//data:service, 
+							jsonReader : {
+								repeatitems : false,
+								total : "total",
+								page : "page",
+								records : "records",
+								root : "service"
+							},
+							colNames : ['サービス名', '課金単位', 'サービス課金額' ],
+							colModel : [{
+								name : 'name',
+								index : 'name',
+								width : 330,
+								align : 'center'
+							}, {
+								name : 'attribute',
+								index : 'attribute',
+								width : 330,
+								align : 'center',
+								formatter:imageformat
+							}, {
+								name : 'charges',
+								index : 'charges',
+								width : 330,
+								align : 'center'
+							}, ],
+
+							width : 1000,
+							height : 'auto',
+							rownumbers : true,
+							rowNum:-1,
+					
+							
+		});
+	}
+	
+	function imageformat( cellvalue, options, rowobject ){
+		var message=cellvalue.period+" "+cellvalue.type+" "+cellvalue.amount+"円/"+cellvalue.unit_amount+cellvalue.unit_symbol;
+	    return message;
+	}  
+
+	function initTenant(){
+		$("#tb").jqGrid(
+				{
+					datatype : 'local',
+					//data:service, 
+					colNames : [' ','サービス名', '課金単位', 'サービス課金額' ],
+					colModel : [{
+						name : 'id',
+						index:'id',
+						sortable: false,
+						width : 8,
+						align : 'center'
+					}, {
+						name : 'name',
+						index : 'name',
+						width : 100,
+						align : 'center'
+					}, {
+						name : 'attribute',
+						index : 'attribute',
+						width : 100,
+						align : 'center'
+					}, {
+						name : 'charges',
+						index : 'charges',
+						width : 100,
+						align : 'center'
+					}, ],
+
+					width : 1000,
+					height : 'auto',
+		});
+	}
+	
+	
+
+********后台代码
+protected void doGet(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+
+		try {
+
+			JSONObject jsonObj = new JSONObject(); //原始json对象
+			
+			JSONObject status = new JSONObject(); //定义status的json对象
+			status.put("errcode",0);
+			status.put("message","failed");
+			jsonObj.put("status", status);
+			
+			JSONObject dat = new JSONObject(); // 构造date json对象
+			dat.put("year", "2016");
+			dat.put("month", "12");
+			dat.put("day", "06");
+			jsonObj.put("date", dat);
+
+			JSONObject tenant = new JSONObject(); // 构造tenant json对象
+			tenant.put("name", "テナントP");
+			tenant.put("charges", 8000);
+			jsonObj.put("tenant", tenant);
+
+			JSONObject items = new JSONObject(); // 构造items json对象
+			JSONObject tenant2 = new JSONObject(); // 构造item中的tenant json对象
+			tenant2.put("name", "テナントP");
+			tenant2.put("charges", 5000);
+			JSONObject attribute1 = new JSONObject();// 构造属性 json对象
+			attribute1.put("period", "月额");
+			attribute1.put("type", "固定");
+			attribute1.put("unit_symbol", "月");
+			attribute1.put("unit_amount", "1");
+			attribute1.put("amount", 5000);
+			tenant2.put("attributes", attribute1);
+			items.put("tenant", tenant2);
+
+			String type = request.getParameter("type");
+			int rows = 5;   //预定义为5行
+			String wPage = request.getParameter("page");//当前页
+			String wRows = request.getParameter("rows");
+			if(wRows!=null &&wRows!="")
+			{
+				rows=Integer.parseInt(wRows);
+			}
+			// int countTimes = Integer.parseInt((String)
+			// request.getSession().getAttribute("countTimes"));
+			int countTimes = 12;
+			int wTotal = countTimes % rows > 0 ? (countTimes / rows + 1) : countTimes / rows;
+
+
+			JSONArray service = new JSONArray(); // 构造service数组
+			for (int i = 1; i < 12; i++) {
+				JSONObject obj = new JSONObject();
+				obj.put("name", "service" + i);
+				obj.put("charges", i * 1000);
+				JSONObject attribute2 = new JSONObject();// 构造属性 json对象
+				attribute2.put("period", "月额");
+				attribute2.put("type", "固定");
+				attribute2.put("unit_symbol", "月");
+				attribute2.put("unit_amount", "1");
+				attribute2.put("amount", i * 1000);
+				// obj.put("attribute", "test_attr"); //属性对象放入属性中
+				obj.put("attribute", attribute2);
+				service.put(obj); // 单个对象添加到service中
+			}
+			
+			
+			items.put("service", service); // 把service放到items中
+
+			items.accumulate("page", wPage);
+			items.accumulate("total", wTotal);
+			items.accumulate("records", countTimes);
+
+			response.setCharacterEncoding("UTF-8");
+			if(type!=null && type.equals("grid"))
+			{
+				System.out.println(items.toString());
+				response.getWriter().write(items.toString());
+				return;
+			}
+			
+			jsonObj.put("items", items);
+			System.out.println("json对象" + jsonObj.toString());
+			response.getWriter().println(jsonObj.toString());
+			
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+
