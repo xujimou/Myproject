@@ -1,0 +1,65 @@
+﻿//设置一个变量 该变量为只读
+NAME="this is var"
+readonly NAME
+unset NAME //取消设置定义的变量值
+
+//设置数组并且取值显示
+NAME[0]="papa"
+NAME【1】="mama"
+NAME[2]="sister"
+NAME[3]="Daisy"
+echo "Fisrt Index: ${NAME[0]}"
+
+
+***** spawn:启动新的进程,后面加上需要执行的shell命令 比如:spawn sudo touch testfile
+
+****Expect中最关键的四个命令:
+***** send:用于向进程发送字符串
+send "hello world\n"
+hellow world
+***** expect:从进程接收字符串(只有spawn的执行结果才会被except捕捉到)
+expect "hi" {send "you said hi"} //在标准输入流中输入 test hi 匹配到hi后 输出"you said hi"
+expect "hi" send "you typed<$expect_out(buffer)>" //获取标准输入流的所有数据
+expetc "hi" send "i get expect <$expect_out(0,string)>" //标准输入流输入test hi， 发送的是 i get expect hi
+
+expext 多分支语法:
+expect "hi" {send "hi world/n"}/
+"hello" {send "hello world/n"}/
+"bye" {send "bye bye/n"}
+等同于这种语法:
+expect{
+	"hi" {send "hi world/n"}
+	"hello" {send "hello world/n"}
+	"bye" {send "bye bye/n"}
+}
+
+
+***** interact:允许用户交互, 登录到ftp上后，允许用户交互
+spawn ftp ftp.test.com
+expect "Name"
+send "user\r"
+expect "Password:"
+send "123456\r"
+interact
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	   
+	   
+	   
+	   
+	   

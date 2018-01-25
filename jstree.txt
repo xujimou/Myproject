@@ -1,0 +1,66 @@
+﻿	
+********使用脚本生成jstree
+	$(function(){
+		$("#container").jstree({
+			'core' :{
+				'data' :[
+					{
+						"text":"this is root",
+						"state":{"opened":true},   //如果根节点加了属性的话 要加,结尾
+						"children":[
+							{
+								"text":"children node 1",
+								"state":{"selected":true},
+							    "icon" : "glyphicon glyphicon-flash"  //子节点加了属性，不需要用，结尾
+							},
+							{
+								"text":"node 2"
+							}
+						]
+					}
+				]
+			}
+		});
+	}); 
+	
+	
+	//jstree 常用的一些事件
+	/* 	$('#treeview1').on("changed.jstree", function (e, data) {  //选择的节点发生改变
+	    console.log("The selected nodes are:");  
+	    console.log(data.node.id);               //选择的node id  
+	    console.log(data.node.text);            //选择的node text  
+	});  */ 
+	
+	$("#treeview1").bind("select_node.jstree",function(e,data){//该函数表示选择一个节点
+		 console.log(data.node.id);
+		if(data.node.id!=1)     //排除第一个节点
+			{
+				data.instance.toggle_node(data.node);//单击展开下面节点 
+			}
+		
+	});
+	
+	//输入框输入定时自动搜索
+	var to=false;
+	$("#search_ay").keyup(function(){ //key当按键按下松开时触发
+		if(to){
+			clearTimeout(to);
+		}
+		to=setTimeout(function(){
+			$("#treeview1").jstree(true).search($("#search_ay").val());
+		},10);		
+		
+	});
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

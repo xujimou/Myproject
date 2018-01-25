@@ -1,0 +1,28 @@
+﻿服务端:
+***1. spring.xml注入两个对象，serviceRegistry 参数为 registryAddress 存储服务器地址的仓库地址,仓库地址存于一个根节点 /registry 下
+RpcServer，  参数为 serviceRgistry(仓库的地址) 和 serverAddress服务器的地址
+×××2. 对象注入完毕后，执行contextAware方法: 获取所有被注解标注的服务类对象和类名，存放在一个beanmap<String,Object>中。 
+定义一个全局的 handlermap<String,Object>， 遍历beanmap，获取所有的服务类对象，获取他们对应的接口名， 将接口名和服务类对象存入handlermap中.
+***3. 执行setProperties()的方法，
+       (1)如果serviceRgistry不为空，那么调用create的方法，在仓库根节点下新建一个节点，用来存放本服务器的地址
+	   (2)搭建netty服务端框架进行通信。
+	   (3)配置一个RpcDecoderhandler，对ByteBuf进行反序列化，获取一个Rpcrequest
+	   (4)配置一个Serverhandler，利用Rpcrequest中的接口名，利用接口名从handlermap中获取实现类，利用该接口名获取一个字节码对象和Method，
+	   在method上设置传入的参数类型和参数，然后执行该method，将要返回的数据存入Rpcresponse中
+	   (5)配置一个Rpcresponsehandler，将Rpcresponse进行序列化到ByteBuf中发送出去
+客户端:
+***1. spring.xml注入两个对象,serviceDiscovery，包含discover()方法，用于从仓库根节点下随机获取一个节点，从中获取一个服务器的地址
+RpcProxy, 参数为serviceDiscovery,获取服务器地址
+***2. RpcProxy.create(HelloService.class)对HelloService进行代理，获取一个代理对象.
+   新建一个Rpcrequest对象，封装一些信息
+   requestId，UUID.randomUUID().toString
+   这个字节码对象实现接口的名称, 要执行方法的方法名，要执行方法的方法参数类型，要执行方法的方法参数.
+***3. 利用serviceDiscovery执行discover()方法(随机获取,均衡负载)，获取serverAddress(服务器地址)
+***4. 新建一个RpcClient对象  RpcClient client=new RpcClient(serverAddress); 利用Rpcresponse response=client.send(Rpcrequest)发送请求获取响应
+	(1)send方法中 搭建netty客户端的框架,进行通信
+	(2)配置一个RpcEncoderhandler， 将Rpcrequest请求进行序列化后发送
+	(3)配置一个RpcDecoderhandler， 接受ByteBuf中的字节码数据，序列化成Rpcresponse对象
+	(4)配置一个Clienthandler， 获取response返回给代理 //或者将Rpclient继承simpleInboundhandler  在这个类中写一个ReadChannel方法，吧response赋值给成员变量，返回给代理
+***5. 代理获取response后，将response中的result返回给前台调用的方法
+
+
