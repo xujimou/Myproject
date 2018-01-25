@@ -1,0 +1,80 @@
+
+StringUtils 的常用函数:
+StringUtils.equals("java.util.Date", classType); //比较这两个字符串是否相等
+StringUtils.isNotBlank(pTenant);//判断该字符串是否不为空(空字符串和null)而且长度不为0,而且不为空白格
+StringUtils.isNotEmpty(pTenant);//判断该字符串是否不为空(空字符串和null)而且长度不为0
+
+***** 时间戳转换为 util.Date
+SimpleDateFormat wFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		Long wTime = new Long(pTime);
+		String d = wFormat.format(wTime);
+		Date date = wFormat.parse(d);
+
+//将字符串拆分转换成util.date格式  然后再转换成Timestamp格式
+private static SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+	private static Calendar calendar=Calendar.getInstance();
+	
+	public static Date getUtilDate(String dateStr)
+	{
+		String [] date=dateStr.trim().split(" ");
+		
+		String [] dateYMD=date[0].trim().split("-");
+		String [] dateHMS=date[1].trim().split(":");
+		
+		
+		calendar.set(Integer.parseInt(dateYMD[0]), Integer.parseInt(dateYMD[1])-1, Integer.parseInt(dateYMD[2]),
+				Integer.parseInt(dateHMS[0]), Integer.parseInt(dateHMS[1]), Integer.parseInt(dateHMS[2]));
+		
+		String date2=sdf.format(calendar.getTime());
+		Timestamp time=Timestamp.valueOf(date2); 
+		System.out.println(time);
+		return time;
+	}
+
+
+public boolean isDebugEnabled() {    
+  if(repository.isDisabled( Level.DEBUG_INT))
+      return false;
+    return Level.DEBUG.isGreaterOrEqual(this.getEffectiveLevel());
+  }
+  
+    以下是debug()的源码：
+     public void debug(Object message) {
+    if(repository.isDisabled(Level.DEBUG_INT))
+      return;
+    if(Level.DEBUG.isGreaterOrEqual(this.getEffectiveLevel())) {
+      forcedLog(FQCN, Level.DEBUG, message, null);
+    }
+  }
+***isDebugEnabled()是先进行判断，而debug方法是先获取参数，而再判断debug类型，如果不需要debug，那么参数获取的没有意义。
+ 所以一般用isDebugEnabled比较好。
+
+ ********异常信息的打印
+ e.getStackTrace() 返回一个 StackTraceElement[]
+ExceptionUtils.getStackTrace(e) 返回一个 String
+如果是打印异常信息的话 String 更好
+
+*******PropertiesConfiguration的基本使用
+ //然后是PropertiesConfiguration
+    PropertiesConfiguration propsConfig=new PropertiesConfiguration();
+    //默认的编码格式是ISO-8859-1，所以才在读取文件之前先设置了编码格式
+    propsConfig.setEncoding("UTF-8")
+    propsConfig.load(propertiesFileName);
+    String strValue=propsConfig.getString("key");
+    String longValue=propsConfig.getLong("longKey");
+    String[] strArray=propsConfig.getStringArray(arrayKey);
+    //这里需要提的是propsConfig的默认分隔符是','
+
+Properties本身就是个Hashtable，使用遍历map的方法就好了。而PropertiesConfiguration并没有把它是用什么实现的暴露出来，
+而是提供了getKeys方法，返回迭代器，重要的是这个迭代器是按照文件顺序读取的。这就让人非常开心了。顺便一提，调用save方法保存的时候并不会改变文件顺序。
+
+假设使用Properties，我希望内存中的Properties对象的数据与文件总是保持同步，那我只能写个定时器，检查文件是否更新过，
+是否需要重新读取。但PropertiesConfiguration就不用，它提供了setReloadingStrategy方法，可以设置重加载策略，常见的有
+
+propsConfig.setReloadingStrategy(new FileChangedReloadingStrategy());当文件被修改时重新加载。除此之外还有。
+propsConfig.setAutoSave(true);	修改属性之后自动保存。
+	
+	
+*****利用Gson可以把一个json的字符串转换成对象
+ String jsonStr = EntityUtils.toString(response.getEntity());
+ mChargeInfo = mGson.fromJson(jsonStr, ChargingInfo.class);
